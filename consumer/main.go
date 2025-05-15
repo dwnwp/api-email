@@ -77,14 +77,17 @@ func main() {
 				continue
 			}
 
+			bodyTemplate := models.CreateMailBodyTemplate(msg.BodySubject, msg.BodyContent)
+
 			fmt.Println("📩 Received Email:")
 			fmt.Println("From:   ", msg.From)
 			fmt.Println("To:     ", msg.To)
 			fmt.Println("Subject:", msg.Subject)
-			fmt.Println("Body:   ", msg.Body)
+			fmt.Println("BodySubject:   ", msg.BodySubject)
+			fmt.Println("BodyContent:   ", msg.BodyContent)
 			fmt.Println("--------")
 
-			if err := mailer.Send(msg.From, msg.To, msg.Subject, msg.Body) ; err != nil {
+			if err := mailer.Send(msg.From, msg.To, msg.Subject, bodyTemplate) ; err != nil {
 				log.Printf("Failed to send an Email: %v", err)
 			}
 		}

@@ -25,7 +25,7 @@ func (m *Mailer) Send(from, to, subject, body string) error {
 	msg.SetHeader("From", from)
 	msg.SetHeader("To", to)
 	msg.SetHeader("Subject", subject)
-	msg.SetBody("text/plain", body)
+	msg.SetBody("text/html", body)
 
 	return m.Dialer.DialAndSend(msg)
 }
