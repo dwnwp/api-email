@@ -29,7 +29,7 @@ func main() {
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*", "http://localhost:8080"},
-		AllowMethods: []string{http.MethodPost},
+		AllowMethods: []string{http.MethodPost, http.MethodGet},
 	}))
 
 	api := e.Group("/api")

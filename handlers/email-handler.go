@@ -20,7 +20,7 @@ func ProducerEmail() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, models.RespondError{Error: "error invalid input"})
 		}
 
-		// 1. Connect to RabbitMQ
+		// Connect to RabbitMQ
 		connString := "amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASSWORD") + "@localhost:" + os.Getenv("RABBITMQ_PORT") + "/"
 		conn, err := amqp.Dial(connString)
 		if err != nil {
@@ -28,14 +28,14 @@ func ProducerEmail() echo.HandlerFunc {
 		}
 		defer conn.Close()
 
-		// 2. Open channel
+		// Open channel
 		ch, err := conn.Channel()
 		if err != nil {
 			return c.JSON(http.StatusOK, models.RespondError{Error: fmt.Sprintf("failed to open channel: %v", err)})
 		}
 		defer ch.Close()
 
-		// 3. Declare queue (will be created if it doesn't exist)
+		// Declare queue (will be created if it not exist)
 		queueName := "SendEmail"
 		_, err = ch.QueueDeclare(
 			queueName,
@@ -49,13 +49,11 @@ func ProducerEmail() echo.HandlerFunc {
 			return c.JSON(http.StatusOK, models.RespondError{Error: fmt.Sprintf("failed to declare queue: %v", err)})
 		}
 
-		// 5. Convert to JSON
+		// Publish message
 		body, err := json.Marshal(emailRequest)
 		if err != nil {
 			log.Fatalf("Failed to marshal message: %v", err)
 		}
-
-		// 6. Publish message
 		err = ch.Publish(
 			"",        // exchange
 			queueName, // routing key

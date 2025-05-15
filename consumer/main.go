@@ -20,7 +20,7 @@ func init() {
 }
 
 func main() {
-	// 1. Connect to RabbitMQ
+	// Connect to RabbitMQ
 	connString := "amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASSWORD") + "@localhost:" + os.Getenv("RABBITMQ_PORT") + "/"
 		conn, err := amqp.Dial(connString)
 	if err != nil {
@@ -28,14 +28,14 @@ func main() {
 	}
 	defer conn.Close()
 
-	// 2. Open a channel
+	// Open a channel (Consumer)
 	ch, err := conn.Channel()
 	if err != nil {
 		log.Fatalf("Failed to open a channel: %v", err)
 	}
 	defer ch.Close()
 
-	// 3. Declare the queue (same name as Producer)
+	// Declare the queue
 	queueName := "SendEmail"
 	_, err = ch.QueueDeclare(
 		queueName,
@@ -49,7 +49,7 @@ func main() {
 		log.Fatalf("Failed to declare queue: %v", err)
 	}
 
-	// 4. Consume messages
+	// Consume messages
 	msgs, err := ch.Consume(
 		queueName,
 		"",    // consumer tag
@@ -68,7 +68,6 @@ func main() {
 	forever := make(chan bool)
 	mailer := services.NewMailer()
 
-	// 5. Start goroutine to handle messages
 	go func() {
 		for d := range msgs {
 			var msg models.MailerRequest
