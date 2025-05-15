@@ -9,7 +9,6 @@ import (
 	"github.com/dwnwp/api-email/models"
 	"github.com/dwnwp/api-email/services"
 	"github.com/joho/godotenv"
-	"github.com/streadway/amqp"
 )
 
 func init() {
@@ -22,35 +21,20 @@ func init() {
 func main() {
 	// Connect to RabbitMQ
 	connString := "amqp://" + os.Getenv("RABBITMQ_USERNAME") + ":" + os.Getenv("RABBITMQ_PASSWORD") + "@localhost:" + os.Getenv("RABBITMQ_PORT") + "/"
-		conn, err := amqp.Dial(connString)
+	rabbitmq, err := services.ConnectToRabbitMQ(connString)
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		log.Fatal(err)
 	}
-	defer conn.Close()
-
-	// Open a channel (Consumer)
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Fatalf("Failed to open a channel: %v", err)
-	}
-	defer ch.Close()
+	defer rabbitmq.DisconnectFromRabbitMQ()
 
 	// Declare the queue
 	queueName := "SendEmail"
-	_, err = ch.QueueDeclare(
-		queueName,
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
+	if _, err := rabbitmq.Channel.QueueDeclare(queueName, true, false, false, false, nil); err != nil {
 		log.Fatalf("Failed to declare queue: %v", err)
 	}
 
 	// Consume messages
-	msgs, err := ch.Consume(
+	messages, err := rabbitmq.Channel.Consume(
 		queueName,
 		"",    // consumer tag
 		true,  // auto-ack
@@ -69,7 +53,7 @@ func main() {
 	mailer := services.NewMailer()
 
 	go func() {
-		for d := range msgs {
+		for d := range messages {
 			var msg models.MailerRequest
 			if err := json.Unmarshal(d.Body, &msg); err != nil {
 				log.Printf("❌ Error decoding JSON: %v", err)
@@ -86,7 +70,7 @@ func main() {
 			fmt.Println("BodyContent:   ", msg.BodyContent)
 			fmt.Println("--------")
 
-			if err := mailer.Send(msg.From, msg.To, msg.Subject, bodyTemplate) ; err != nil {
+			if err := mailer.Send(msg.From, msg.To, msg.Subject, bodyTemplate); err != nil {
 				log.Printf("Failed to send an Email: %v", err)
 			}
 		}

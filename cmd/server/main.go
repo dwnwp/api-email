@@ -34,7 +34,7 @@ func main() {
 
 	api := e.Group("/api")
 	api.GET("/health", handlers.Healthcheck)
-	api.POST("/email/create", handlers.ProducerEmail())
+	api.POST("/email/create", handlers.ProducerEmail)
 
 	fmt.Println("All registered routes:")
 	data := e.Routes()
