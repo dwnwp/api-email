@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/dwnwp/api-email/models"
 	"github.com/dwnwp/api-email/services"
@@ -49,8 +51,10 @@ func main() {
 
 	log.Println("🟢 Waiting for messages...")
 
-	forever := make(chan bool)
 	mailer := services.NewMailer()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		for d := range messages {
@@ -76,5 +80,6 @@ func main() {
 		}
 	}()
 
-	<-forever
+	<-sigChan
+	fmt.Println("Gracefully stop consuming.")
 }
