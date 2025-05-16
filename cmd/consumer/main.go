@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -76,7 +77,14 @@ func main() {
 
 			if err := mailer.Send(msg.From, msg.To, msg.Subject, bodyTemplate); err != nil {
 				log.Printf("Failed to send an Email: %v", err)
+				continue
 			}
+			_, err := http.Get("http://localhost:8000/notify")
+			if err != nil {
+				log.Printf("error: %v", err)
+				return
+			}
+
 		}
 	}()
 
